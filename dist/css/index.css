@@ -1,0 +1,7 @@
+body {
+    background : #abcdef url(../images/normal.jpg) no-repeat;
+    font-size:40px;
+}
+
+a {transition:all .5s ease-in-out;text-decoration:none;display:block;width:500px;height:100px;background:red;color:#fff;line-height:100px;text-align:center;position:relative;}
+/*a:hover {font-size:100px;transform:scale(2,2) skew(180deg);}*/
