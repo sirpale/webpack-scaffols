@@ -3,9 +3,8 @@
  */
 // import React,{ Component, PropTypes } from 'react';
 // import ReactDom, {render} from 'react-dom';
-import HEAD from '../../../views/head.html';
-import FOOT from '../../../views/foot.html';
-import './main';
+
+import '../common/control';
 import content from '../components/content';
 
 // render (
@@ -19,16 +18,13 @@ import content from '../components/content';
 // main.insertAdjacentHTML('beforebegin',HEAD);
 // main.insertAdjacentHTML('afterend',FOOT);
 
-let main = $('#main');
 
-$(function(){
-  main.before(HEAD).after(FOOT);
+
+let btn = $('.btn');
+
+btn.on('click',function(){
+  console.log(111);
 });
-
-
-
-
-// document.getElementById('app').innerHTML = content;
 
 
 

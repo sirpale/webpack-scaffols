@@ -7,54 +7,80 @@ const webpack = require('webpack'),
     HtmlWebpackPlugin = require('html-webpack-plugin');
 
 
-const DIST_DIR = path.resolve(__dirname, 'dist'),
-    SRC_DIR = path.resolve(__dirname, 'src');
+const ROOT_PATH = path.resolve(__dirname),
+    SRC_PATH = path.resolve(ROOT_PATH,'src'),
+    SRC_FILE = path.resolve(SRC_PATH,'public'),
+    DIST_PATH = path.resolve(ROOT_PATH,'dist');
 
 console.log('开始编译');
 
 let config = {
     // devtool : 'cheap-module-eval-source-map',
     entry: {
-        index: SRC_DIR + '/public/js/common/index.js',
-        games: SRC_DIR + '/public/js/common/games.js'
+        common : [
+            SRC_FILE + '/js/common/core.js',
+            SRC_FILE + '/js/common/control.js'
+        ],
+
+        index: SRC_FILE + '/js/modules/index.js',
+        home :SRC_FILE + '/js/modules/home.js',
+        games: SRC_FILE + '/js/modules/games.js'
     },
     output: {
-        path: DIST_DIR,            // 发布文件地址
+        path: DIST_PATH,            // 发布文件地址
         filename: 'js/[name].js',  // 编译后的文件名字
         publicPath: '../',          // 编译好的文件，在服务器的路径，这里是静态资源
         chunkFilename: '[name].[chunkhash:5].min.js'
     },
     module: {
         loaders: [
-            // css 加载
             {
-                test: /\.css$/,
-                exclude: /node_modules/,
-                loader: ExtractTextPlugin.extract({fallback: 'style-loader', use: 'css-loader?module'})
+                test : /\.html$/,
+                exclude : /^node_modules/,
+                include : [SRC_PATH],
+                loader : 'raw-loader'
             },
-            // {
-            //     test : /\.css$/,
-            //     loader : 'style-loader!css-loader',
-            // },
-            // 字体加载
             {
-                test: /\.(eot|ttf|woff|woff2|svg|gif|appcache)(\?|$)/,
-                loader: 'file-loader?name=fonts/[name].[ext]'
+                test : /\.js$/,
+                exclude : /^node_modules/,
+                include : [SRC_PATH],
+                loader : 'babel-loader'
             },
-            // 图片加载
             {
-                test: /.(png|jpg)$/,
-                loader: 'url-loader?limit=20000&name=images/[name].[ext]'
+                test : /\.css$/,
+                exclude : /^node_modules/,
+                include : [SRC_PATH],
+                loader : ExtractTextPlugin.extract({fallback:'style-loader',use:'css-loader!autoprefixer-loader'})
             },
-            // js加载
             {
-                test: /\.(js|jsx)$/,
-                loader: 'babel-loader',
-                exclude: /node_modules/,
-                query: {
-                    presets: ['react', 'es2015', 'stage-2']
-                }
-
+                test : /\.less$/,
+                exclude : /^node_modules/,
+                include : [SRC_PATH],
+                loader : ExtractTextPlugin.extract({fallback:'style-loader',use:'css-loader!autoprefixer-loader!less-loader'})
+            },
+            {
+                test : /\.scss$/,
+                exclude : /^node_modules/,
+                include : [SRC_PATH],
+                loader : ExtractTextPlugin.extract({fallback:'style-loader',use:'css-loader!autoprefixer-loader!node-sass'})
+            },
+            {
+                test : /\.(eot|woff|svg|ttf|woff2|gif|appcache)(\?|$)/,
+                exclude : /^node_modules/,
+                include : [SRC_PATH],
+                loader : 'file-loader?name=fonts/[name].[ext]'
+            },
+            {
+                test : /\.(png|jpg)$/,
+                exclude : /^node_modules$/,
+                include : [SRC_PATH],
+                loader : 'url-loader?limit=8192&name=/dist/images/[name].[ext]'
+            },
+            {
+                test : /\.jsx$/,
+                exclude : /^node_modules/,
+                include :[SRC_PATH],
+                loaders : ['jsx-loader','babel-loader']
             }
         ]
     },
@@ -64,13 +90,11 @@ let config = {
          * 不指定[name]
          * 则a.css,c.css每个单独创建一个入口
          * */
-        new ExtractTextPlugin({
-            filename: 'css/[name].css'
-        }),
+        new ExtractTextPlugin('css/[name].css'),
 
         // 引入jquery
         new webpack.ProvidePlugin({
-            $: 'jqeury',
+            $: 'jquery',
             jQuery: 'jquery',
             'window.jQuery': 'jquery'
         }),
@@ -83,12 +107,12 @@ let config = {
                 warnings: false
             }
         }),
-        new webpack.optimize.CommonsChunkPlugin('common')
+        new webpack.optimize.CommonsChunkPlugin({name:'control',filename:'control.js'})
 
     ],
-    // resolve : {
-    //     extensions : ['','.js','.jsx']  // 后缀自动补全
-    // }
+    resolve : {
+        extensions : ['.js','.jsx','.less','.scss','.css']
+    }
     // devServer : {
     //     contentBase : DIST_DIR + '/views/',
     //     compress : true,
@@ -101,29 +125,26 @@ let config = {
 let pages = config.entry,
     pagesLen = 0;
 
-// 根据模板插入CSS、js等生成最终HTML
-for (let chunkName in pages) {
-    pagesLen++;
-    let conf = {
-        title: chunkName,
-        // 生成的html存放路径，相对于path
-        filename: DIST_DIR + '/views/' + chunkName + '.html',
-        // html模板路径
-        template: SRC_DIR + '/views/' + chunkName + '.tpl.html',
-        // 指定位置
-        inject: true,
-        // 删除多余信息
-        minify: {
-            removeComments: true,
-            collapseWhitespace: false
-        },
-        // 指定模块
-        chunks: [chunkName, 'common.js'],
-        // 为静态资源生成hash值
-        hash: true
-    };
 
-    config.plugins.push(new HtmlWebpackPlugin(conf));
+for(let chunkName in pages) {
+    pagesLen++;
+
+    if(chunkName !== 'common') {
+        let conf = {
+            title : chunkName,
+            filename : DIST_PATH +'/views/'+chunkName+'.html',
+            template : SRC_PATH + '/views/'+chunkName+'.tpl.html',
+            inject : true,
+            minify : {
+                removeComments : true,
+                collapseWhitespace : false
+            },
+            chunks : [chunkName,'core','control'],
+            hash : true
+        };
+
+        config.plugins.push(new HtmlWebpackPlugin(conf));
+    }
 }
 
 

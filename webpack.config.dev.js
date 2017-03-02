@@ -22,8 +22,9 @@ const config = {
             SRC_FILE + '/js/common/control.js'
         ],
 
-        index: SRC_FILE + '/js/common/index.js',
-        games: SRC_FILE + '/js/common/games.js'
+        index: SRC_FILE + '/js/modules/index.js',
+        home :SRC_FILE + '/js/modules/home.js',
+        games: SRC_FILE + '/js/modules/games.js'
 
     },
     output : {
