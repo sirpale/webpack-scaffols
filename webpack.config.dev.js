@@ -17,8 +17,14 @@ const ROOT_PATH = path.resolve(__dirname),
 const config = {
     devtool : 'cheap-module-eval-source-map',
     entry : {
-        index : SRC_FILE + '/js/common/index.js',
-        games : SRC_FILE + '/js/common/games.js'
+        common : [
+            SRC_FILE + '/js/common/core.js',
+            SRC_FILE + '/js/common/control.js'
+        ],
+
+        index: SRC_FILE + '/js/common/index.js',
+        games: SRC_FILE + '/js/common/games.js'
+
     },
     output : {
         // 编译好的文件，在服务器的路径，这是静态资源地址
@@ -31,6 +37,12 @@ const config = {
     },
     module : {
        loaders : [
+           {
+               test : /\.html$/,
+               exclude : /^node_modules/,
+               include : [SRC_PATH],
+               loader : 'raw-loader'
+           },
            {
                test : /\.js$/,
                exclude : /^node_modules/,
@@ -81,7 +93,26 @@ const config = {
         //        NODE_ENV : JSON.stringify('development')     // 定义编译环境
         //    }
         // }),
-        new ExtractTextPlugin('css/[name].css')
+        // new HtmlWebpackPlugin({
+        //     title : 'index',
+        //     filename : DIST_PATH +'/views/index.html',
+        //     template : SRC_PATH + '/views/index.tpl.html',
+        //     inject : true,
+        //     minify : {
+        //         removeComments : true,
+        //         collapseWhitespace : false
+        //     },
+        //     chunks : ['index','core','control'],
+        //     hash : true
+        // }),
+        new ExtractTextPlugin('css/[name].css'),
+        new webpack.ProvidePlugin({
+            $ : 'jquery',
+            jQuery : 'jquery',
+            'window.jQuery' : 'jquery'
+        }),
+        new webpack.optimize.CommonsChunkPlugin({name:'control',filename:'control.js'})
+
     ],
     resolve : {
         extensions : ['.js','.jsx','.less','.scss','.css']
@@ -105,21 +136,25 @@ let pages = config.entry,
 
 for(let chunkName in pages) {
     pagesLen++;
-    let conf = {
-        title : chunkName,
-        filename : DIST_PATH +'/views/'+chunkName+'.html',
-        template : SRC_PATH + '/views/'+chunkName+'.tpl.html',
-        inject : true,
-        minify : {
-            removeComments : true,
-            collapseWhitespace : false
-        },
-        chunks : [chunkName],
-        hash : true
-    };
 
-    config.plugins.push(new HtmlWebpackPlugin(conf));
+    if(chunkName !== 'common') {
+        let conf = {
+            title : chunkName,
+            filename : DIST_PATH +'/views/'+chunkName+'.html',
+            template : SRC_PATH + '/views/'+chunkName+'.tpl.html',
+            inject : true,
+            minify : {
+                removeComments : true,
+                collapseWhitespace : false
+            },
+            chunks : [chunkName,'core','control'],
+            hash : true
+        };
+
+        config.plugins.push(new HtmlWebpackPlugin(conf));
+    }
 }
+
 
 module.exports = config;
 

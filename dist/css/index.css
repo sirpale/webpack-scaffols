@@ -1,6 +1,7 @@
 body {
     background : #abcdef url(../images/normal.jpg) no-repeat;
-    font-size:40px;
+    font-size:50px;
+    margin:100px;
 }
 
 a {transition:all .5s ease-in-out;text-decoration:none;display:block;width:500px;height:100px;background:red;color:#fff;line-height:100px;text-align:center;position:relative;}
